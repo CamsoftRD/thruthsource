@@ -1,0 +1,43 @@
+# Catálogo y Diccionario de Dominio del ERP de RRHH
+
+version: "1.0.0"
+dominio: "Recursos Humanos y Nómina"
+
+entidades:
+  Empleado:
+    descripcion: Persona natural vinculada contractualmente con la organización.
+    identificador_clave: emp_codigo
+    atributos_clave:
+      - emp_identificacion
+      - emp_email_corp
+      - emp_estado
+
+  Nomina:
+    descripcion: Agrupación periódica de cálculos financieros, devengados y retenciones salariales.
+    identificador_clave: nom_id
+    atributos_clave:
+      - nom_periodo
+      - nom_total_devengado
+      - nom_total_deducido
+
+  Periodo:
+    descripcion: Intervalo de tiempo delimitado (quincenal, mensual) para la acumulación de novedades y pago.
+    atributos_clave:
+      - nom_fecha_inicio
+      - nom_fecha_fin
+
+  Desvinculacion:
+    descripcion: Evento formal de terminación de la relación laboral entre la empresa y el colaborador.
+    atributos_clave:
+      - fecha_salida
+      - motivo
+      - estado_paz_salvo
+
+  Finiquito:
+    descripcion: Consolidación del pago final correspondiente a salarios pendientes, prestaciones y compensaciones.
+    atributos_clave:
+      - monto_total
+      - fecha_pago
+
+  Novedad:
+    descripcion: Transacción u ocurrencia que altera el cálculo ordinario de la nómina (ej. hora extra, falta, incapacidad).
