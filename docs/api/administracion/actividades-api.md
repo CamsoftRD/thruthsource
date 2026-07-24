@@ -4,7 +4,7 @@ Contrato OpenAPI / Markdown para la interacción con los endpoints del módulo d
 
 ---
 
-## 1. Endpoints
+## 1. Endpoints.
 
 ### A. Listar Actividades Corporativas
 * **HTTP Method**: `GET`
