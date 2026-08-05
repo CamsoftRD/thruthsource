@@ -5,10 +5,10 @@ BEGIN TRY
     ====================================================
     PERMISO
     ====================================================
-    Código      : REPGENEMP_HORAEXT
-    Nombre      : Acción: Listado de Horas Extras
-    GUID        : 9FD40243-F60D-4333-95B2-07BCFBAF99E0
-    Padre (GUID): A3F2D8C1-74B6-4E91-B3D7-C8F150294E6A
+    Código      : REPGENEMP_VACACIONES
+    Nombre      : Acción: Listado de Empleado y Vacaciones
+    GUID        : A18F5E2C-9D34-4B67-8E12-6F3A9C7D4B01
+    Padre (GUID): [REEMPLAZAR_POR_GUID_PADRE]
     Módulo      : 4 (EMPLEADOS)
     Proyecto    : 6 (SRH Web)
     Tipo        : 2 (Web API Method)
@@ -19,13 +19,14 @@ BEGIN TRY
     --------------------------------------------------
     -- CONFIGURACIÓN
     --------------------------------------------------
-    DECLARE @Guid VARCHAR(50) = '9FD40243-F60D-4333-95B2-07BCFBAF99E0';
-    DECLARE @Codigo VARCHAR(50) = 'REPGENEMP_HORAEXT';
-    DECLARE @NombreES VARCHAR(200) = 'Acción: Listado de Horas Extras';
-    DECLARE @TooltipES VARCHAR(500) = 'Permite imprimir el listado de horas extras.';
+    DECLARE @Guid VARCHAR(50) = 'A18F5E2C-9D34-4B67-8E12-6F3A9C7D4B01';
+    DECLARE @Codigo VARCHAR(50) = 'REPGENEMP_VACACIONES';
+    
+    DECLARE @NombreES VARCHAR(200) = 'Acción: Listado de Empleado y Vacaciones';
+    DECLARE @TooltipES VARCHAR(500) = 'Genera el listado de empleados con el detalle de sus vacaciones tomadas y pendientes.';
 
-    DECLARE @NombreEN VARCHAR(200) = 'Action: Overtime Hours List';
-    DECLARE @TooltipEN VARCHAR(500) = 'Allows printing the overtime hours list.';
+    DECLARE @NombreEN VARCHAR(200) = 'Action: Employee and Vacations List';
+    DECLARE @TooltipEN VARCHAR(500) = 'Generates the employee list with their taken and pending vacations details.';
 
     /*
     ====================================================
@@ -54,7 +55,7 @@ BEGIN TRY
     8   | ANL    | ANALITICA
     ====================================================
     */
-    DECLARE @ModuloId INT = 4; 
+    DECLARE @ModuloId INT = 4; -- EMPLEADOS
     
     /*
     ====================================================
@@ -73,7 +74,7 @@ BEGIN TRY
     8   | PCC    | Portal de Capacitación
     ====================================================
     */
-    DECLARE @ProyectoId INT = 6;
+    DECLARE @ProyectoId INT = 6; -- SRH Web / TRIPLE
 
     DECLARE @RequiereAutorizacion BIT = 0;
 
@@ -89,14 +90,14 @@ BEGIN TRY
     */
     DECLARE @ScreenType INT = 2;
 
-    -- AHORA ESTA VARIABLE ES EL GUID EN LUGAR DEL ID NUMÉRICO
+    -- IMPORTANTE: Colocar aquí el GUID de la opción de menú "Reportes Generales de Empleados"
     DECLARE @PermisoPadreGuid VARCHAR(50) = 'A3F2D8C1-74B6-4E91-B3D7-C8F150294E6A';
 
     --------------------------------------------------
     -- VARIABLES INTERNAS
     --------------------------------------------------
     DECLARE @NuevoPermisoId INT;
-    DECLARE @PermisoPadreNumId INT; -- NUEVA VARIABLE PARA ALMACENAR EL ID NUMÉRICO
+    DECLARE @PermisoPadreNumId INT;
 
     --------------------------------------------------
     -- VALIDAR SI YA EXISTE
@@ -168,7 +169,7 @@ BEGIN TRY
     VALUES
     (
         @NuevoPermisoId,
-        @PermisoPadreNumId -- AQUÍ USAMOS EL ID NUMÉRICO QUE OBTUVIMOS, NO EL GUID
+        @PermisoPadreNumId
     );
 
     --------------------------------------------------
@@ -195,7 +196,7 @@ BEGIN TRY
         @TooltipEN
     );
 
-    PRINT 'Permiso creado correctamente.';
+    PRINT 'Permiso creado correctamente para el Listado de Empleado y Vacaciones.';
     PRINT 'ID: ' + CAST(@NuevoPermisoId AS VARCHAR(20));
 
     COMMIT TRANSACTION;
