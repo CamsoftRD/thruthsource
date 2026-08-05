@@ -9,8 +9,10 @@ BEGIN TRY
     Nombre      : Acción: Listado de Horas Extras
     GUID        : 9FD40243-F60D-4333-95B2-07BCFBAF99E0
     Padre       : 6399
-    Módulo      : 4
-    Proyecto    : 6
+    Módulo      : 4 (EMPLEADOS)
+    Proyecto    : 6 (SRH Web)
+    Tipo        : 2 (Web API Method)
+    ScreenType  : 2 (Child)
     ====================================================
     */
 
@@ -25,11 +27,68 @@ BEGIN TRY
     DECLARE @NombreEN VARCHAR(200) = 'Action: Overtime Hours List';
     DECLARE @TooltipEN VARCHAR(500) = 'Allows printing the overtime hours list.';
 
+    /*
+    ====================================================
+    TIPOS DE PERMISOS
+    ====================================================
+    1 = Programa
+    2 = Web API Method
+    3 = DLL API Method
+    4 = Acción para una cola
+    5 = Acción básica de alta y baja (insert, update, ver y delete)
+    ====================================================
+    */
     DECLARE @Tipo INT = 2;
-    DECLARE @ModuloId INT = 4;
+    
+    /*
+    ====================================================
+    MÓDULOS DISPONIBLES (Proyecto 6)
+    ====================================================
+    ID  | Siglas | Nombre
+    ----|--------|----------------
+    2   | ADM    | ADMINISTRACION
+    4   | EMP    | EMPLEADOS
+    5   | RCL    | RECLUTAMIENTO
+    6   | APR    | APROBACIONES
+    7   | NOM    | NOMINA
+    8   | ANL    | ANALITICA
+    ====================================================
+    */
+    DECLARE @ModuloId INT = 4; 
+    
+    /*
+    ====================================================
+    PROYECTOS DISPONIBLES
+    ====================================================
+    ID  | Siglas | Nombre
+    ----|--------|----------------------
+    -1  | FMK    | Cam.Framework
+    1   | BNK    | EasyBank
+    2   | BAS    | BAS
+    3   | ONK    | OneClick
+    4   | FTW    | Factoring Web
+    5   | COB    | COBROS M
+    6   | SRH    | SRH Web
+    7   | PTA    | Portal ADM Neg
+    8   | PCC    | Portal de Capacitación
+    ====================================================
+    */
     DECLARE @ProyectoId INT = 6;
+
     DECLARE @RequiereAutorizacion BIT = 0;
+
+    /*
+    ====================================================
+    TIPO DE PANTALLA (ScreenType)
+    ====================================================
+    Sirve para diferenciar si es una pantalla padre (ej: "Trabajar empleados")
+    o una sub-pantalla hija cualquiera.
+    1 = Padre
+    2 = Child
+    ====================================================
+    */
     DECLARE @ScreenType INT = 2;
+
     DECLARE @PermisoPadreId INT = 6399;
 
     --------------------------------------------------
