@@ -8,7 +8,7 @@ BEGIN TRY
     Código      : REPGENEMP_HORAEXT
     Nombre      : Acción: Listado de Horas Extras
     GUID        : 9FD40243-F60D-4333-95B2-07BCFBAF99E0
-    Padre       : 6399
+    Padre (GUID): A3F2D8C1-74B6-4E91-B3D7-C8F150294E6A
     Módulo      : 4 (EMPLEADOS)
     Proyecto    : 6 (SRH Web)
     Tipo        : 2 (Web API Method)
@@ -89,12 +89,14 @@ BEGIN TRY
     */
     DECLARE @ScreenType INT = 2;
 
-    DECLARE @PermisoPadreId INT = 6399;
+    -- AHORA ESTA VARIABLE ES EL GUID EN LUGAR DEL ID NUMÉRICO
+    DECLARE @PermisoPadreGuid VARCHAR(50) = 'A3F2D8C1-74B6-4E91-B3D7-C8F150294E6A';
 
     --------------------------------------------------
     -- VARIABLES INTERNAS
     --------------------------------------------------
     DECLARE @NuevoPermisoId INT;
+    DECLARE @PermisoPadreNumId INT; -- NUEVA VARIABLE PARA ALMACENAR EL ID NUMÉRICO
 
     --------------------------------------------------
     -- VALIDAR SI YA EXISTE
@@ -112,15 +114,17 @@ BEGIN TRY
     END
 
     --------------------------------------------------
-    -- VALIDAR PERMISO PADRE
+    -- OBTENER Y VALIDAR PERMISO PADRE
     --------------------------------------------------
-    IF NOT EXISTS (
-        SELECT 1
-        FROM xsdaaccmst
-        WHERE sdaacc_numid = @PermisoPadreId
-    )
+    -- Buscamos el ID numérico del padre a partir de su GUID
+    SELECT @PermisoPadreNumId = sdaacc_numid
+    FROM xsdaaccmst
+    WHERE sdaacc_guid = @PermisoPadreGuid;
+
+    -- Si es nulo, significa que no encontró el GUID
+    IF @PermisoPadreNumId IS NULL
     BEGIN
-        THROW 50001, 'No existe el permiso padre especificado.', 1;
+        THROW 50001, 'No existe el permiso padre especificado por el GUID.', 1;
     END
 
     --------------------------------------------------
@@ -164,7 +168,7 @@ BEGIN TRY
     VALUES
     (
         @NuevoPermisoId,
-        @PermisoPadreId
+        @PermisoPadreNumId -- AQUÍ USAMOS EL ID NUMÉRICO QUE OBTUVIMOS, NO EL GUID
     );
 
     --------------------------------------------------
