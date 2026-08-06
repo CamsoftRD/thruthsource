@@ -1,208 +1,141 @@
-/*SE DEBE DEFINIR EL REPORTE EN ESTA TABLA xsdareportmst y hadmreportemst, ARQ DEBE DAR EL NOMBRE DEL FRX EN LA DOCUMENTACION*/
-INSERT INTO xsdareportmst VALUES ('A18F5E2C-9D34-4B67-8E12-6F3A9C7D4B01','listadoEmpVac.frx','Data', 'Data1', 1) 
-
 BEGIN TRY
     BEGIN TRANSACTION;
 
-    /*
-    ====================================================
-    PERMISO
-    ====================================================
-    Código      : REPGENEMP_VACACIONES
-    Nombre      : Acción: Listado de Empleado y Vacaciones
-    GUID        : A18F5E2C-9D34-4B67-8E12-6F3A9C7D4B01
-    Padre (GUID): [REEMPLAZAR_POR_GUID_PADRE]
-    Módulo      : 4 (EMPLEADOS)
-    Proyecto    : 6 (SRH Web)
-    Tipo        : 2 (Web API Method)
-    ScreenType  : 2 (Child)
-    ====================================================
-    */
-
     --------------------------------------------------
-    -- CONFIGURACIÓN
+    -- 1. CONFIGURACIÓN DEL PERMISO Y REPORTE
     --------------------------------------------------
-    DECLARE @Guid VARCHAR(50) = 'A18F5E2C-9D34-4B67-8E12-6F3A9C7D4B01';
-    DECLARE @Codigo VARCHAR(50) = 'REPGENEMP_VACACIONES';
+    DECLARE @Guid VARCHAR(50) = 'F2B6D8A4-7E31-4C9F-B056-3A18E9D4C7F2';
+    DECLARE @Codigo VARCHAR(50) = 'REPGENEMP_DGT9';
+    DECLARE @NombreES VARCHAR(200) = 'Acción: Reporte DGT9';
+    DECLARE @TooltipES VARCHAR(500) = 'Genera el reporte DGT9 (Suspensión Contrato Laboral) para el Ministerio de Trabajo.';
+    DECLARE @NombreEN VARCHAR(200) = 'Action: DGT9 Report';
+    DECLARE @TooltipEN VARCHAR(500) = 'Generates the DGT9 Report (Labor Contract Suspension) for the Ministry of Labor.';
     
-    DECLARE @NombreES VARCHAR(200) = 'Acción: Listado de Empleado y Vacaciones';
-    DECLARE @TooltipES VARCHAR(500) = 'Genera el listado de empleados con el detalle de sus vacaciones tomadas y pendientes.';
-
-    DECLARE @NombreEN VARCHAR(200) = 'Action: Employee and Vacations List';
-    DECLARE @TooltipEN VARCHAR(500) = 'Generates the employee list with their taken and pending vacations details.';
-
-    /*
-    ====================================================
-    TIPOS DE PERMISOS
-    ====================================================
-    1 = Programa
-    2 = Web API Method
-    3 = DLL API Method
-    4 = Acción para una cola
-    5 = Acción básica de alta y baja (insert, update, ver y delete)
-    ====================================================
-    */
     DECLARE @Tipo INT = 2;
-    
-    /*
-    ====================================================
-    MÓDULOS DISPONIBLES (Proyecto 6)
-    ====================================================
-    ID  | Siglas | Nombre
-    ----|--------|----------------
-    2   | ADM    | ADMINISTRACION
-    4   | EMP    | EMPLEADOS
-    5   | RCL    | RECLUTAMIENTO
-    6   | APR    | APROBACIONES
-    7   | NOM    | NOMINA
-    8   | ANL    | ANALITICA
-    ====================================================
-    */
     DECLARE @ModuloId INT = 4; -- EMPLEADOS
-    
-    /*
-    ====================================================
-    PROYECTOS DISPONIBLES
-    ====================================================
-    ID  | Siglas | Nombre
-    ----|--------|----------------------
-    -1  | FMK    | Cam.Framework
-    1   | BNK    | EasyBank
-    2   | BAS    | BAS
-    3   | ONK    | OneClick
-    4   | FTW    | Factoring Web
-    5   | COB    | COBROS M
-    6   | SRH    | SRH Web
-    7   | PTA    | Portal ADM Neg
-    8   | PCC    | Portal de Capacitación
-    ====================================================
-    */
     DECLARE @ProyectoId INT = 6; -- SRH Web / TRIPLE
-
     DECLARE @RequiereAutorizacion BIT = 0;
-
-    /*
-    ====================================================
-    TIPO DE PANTALLA (ScreenType)
-    ====================================================
-    Sirve para diferenciar si es una pantalla padre (ej: "Trabajar empleados")
-    o una sub-pantalla hija cualquiera.
-    1 = Padre
-    2 = Child
-    ====================================================
-    */
     DECLARE @ScreenType INT = 2;
-
-    -- IMPORTANTE: Colocar aquí el GUID de la opción de menú "Reportes Generales de Empleados"
     DECLARE @PermisoPadreGuid VARCHAR(50) = 'A3F2D8C1-74B6-4E91-B3D7-C8F150294E6A';
 
-    --------------------------------------------------
-    -- VARIABLES INTERNAS
-    --------------------------------------------------
+    -- VARIABLES DINÁMICAS PARA REPORTES
+    DECLARE @EsReporte BIT = 1; -- 1 = Es un reporte (aplica inserts), 0 = Solo crear permiso
+    DECLARE @NombreReporteFRX VARCHAR(100) = 'reporteDGT9.frx';
+    DECLARE @FuenteDatos VARCHAR(100) = 'rptDGT9View'; 
+
     DECLARE @NuevoPermisoId INT;
     DECLARE @PermisoPadreNumId INT;
 
     --------------------------------------------------
-    -- VALIDAR SI YA EXISTE
+    -- 2. OBTENER Y VALIDAR PERMISO PADRE
     --------------------------------------------------
-    IF EXISTS (
-        SELECT 1
-        FROM xsdaaccmst
-        WHERE sdaacc_codigo = @Codigo
-           OR sdaacc_guid = @Guid
-    )
-    BEGIN
-        PRINT 'El permiso ya existe. Código: ' + @Codigo;
-        COMMIT TRANSACTION;
-        RETURN;
-    END
-
-    --------------------------------------------------
-    -- OBTENER Y VALIDAR PERMISO PADRE
-    --------------------------------------------------
-    -- Buscamos el ID numérico del padre a partir de su GUID
     SELECT @PermisoPadreNumId = sdaacc_numid
     FROM xsdaaccmst
     WHERE sdaacc_guid = @PermisoPadreGuid;
 
-    -- Si es nulo, significa que no encontró el GUID
     IF @PermisoPadreNumId IS NULL
-    BEGIN
         THROW 50001, 'No existe el permiso padre especificado por el GUID.', 1;
+
+    --------------------------------------------------
+    -- 3. INSERTAR O RECUPERAR PERMISO
+    --------------------------------------------------
+    IF EXISTS (SELECT 1 FROM xsdaaccmst WHERE sdaacc_guid = @Guid)
+    BEGIN
+        SELECT @NuevoPermisoId = sdaacc_numid FROM xsdaaccmst WHERE sdaacc_guid = @Guid;
+        PRINT 'El permiso ya existe. ID: ' + CAST(@NuevoPermisoId AS VARCHAR(20));
+    END
+    ELSE
+    BEGIN
+        INSERT INTO xsdaaccmst (
+            sdaacc_guid, sdaacc_tipo, sdaacc_codigo, sdamod_numid, sdapry_codigo,
+            sdaacc_reqaut, sdaacc_nombre, sdaacc_tooltip, sdaacc_screentype
+        )
+        VALUES (
+            @Guid, @Tipo, @Codigo, @ModuloId, @ProyectoId,
+            @RequiereAutorizacion, @NombreES, @TooltipES, @ScreenType
+        );
+
+        SET @NuevoPermisoId = SCOPE_IDENTITY();
+
+        INSERT INTO xsdaaccdet (sdaacc_numid, sdaacc_master)
+        VALUES (@NuevoPermisoId, @PermisoPadreNumId);
+
+        INSERT INTO xsdaaccmstlan (sdaacc_numid, sdalan_codigo, sdaacc_nombre, sdaacc_tooltip)
+        VALUES 
+        (@NuevoPermisoId, 'es-DO', @NombreES, @TooltipES),
+        (@NuevoPermisoId, 'en-US', @NombreEN, @TooltipEN);
+        
+        PRINT 'Permiso creado correctamente. ID: ' + CAST(@NuevoPermisoId AS VARCHAR(20));
     END
 
     --------------------------------------------------
-    -- INSERTAR PERMISO
+    -- 4 y 5. LÓGICA DE REPORTE (CONDICIONAL)
     --------------------------------------------------
-    INSERT INTO xsdaaccmst
-    (
-        sdaacc_guid,
-        sdaacc_tipo,
-        sdaacc_codigo,
-        sdamod_numid,
-        sdapry_codigo,
-        sdaacc_reqaut,
-        sdaacc_nombre,
-        sdaacc_tooltip,
-        sdaacc_screentype
-    )
-    VALUES
-    (
-        @Guid,
-        @Tipo,
-        @Codigo,
-        @ModuloId,
-        @ProyectoId,
-        @RequiereAutorizacion,
-        @NombreES,
-        @TooltipES,
-        @ScreenType
-    );
+    IF (@EsReporte = 1)
+    BEGIN
+        DECLARE @SdaReportNumId INT;
 
-    SET @NuevoPermisoId = SCOPE_IDENTITY();
+        -- DEFINICIÓN DEL ARCHIVO FRX
+        IF NOT EXISTS (SELECT 1 FROM xsdareportmst WHERE sdareport_guid = @Guid)
+        BEGIN
+            INSERT INTO xsdareportmst (
+                sdareport_guid, 
+                sdareport_filename, 
+                sdareport_datasourcename, 
+                sdareport_databandname, 
+                sdareport_datasourcetype
+            )
+            VALUES (@Guid, @NombreReporteFRX, 'Data', 'Data1', 1);
+            
+            SET @SdaReportNumId = SCOPE_IDENTITY();
+        END
+        ELSE
+        BEGIN
+            SELECT @SdaReportNumId = sdareport_numid FROM xsdareportmst WHERE sdareport_guid = @Guid;
+        END
 
-    --------------------------------------------------
-    -- RELACIÓN JERÁRQUICA
-    --------------------------------------------------
-    INSERT INTO xsdaaccdet
-    (
-        sdaacc_numid,
-        sdaacc_master
-    )
-    VALUES
-    (
-        @NuevoPermisoId,
-        @PermisoPadreNumId
-    );
-
-    --------------------------------------------------
-    -- TRADUCCIONES
-    --------------------------------------------------
-    INSERT INTO xsdaaccmstlan
-    (
-        sdaacc_numid,
-        sdalan_codigo,
-        sdaacc_nombre,
-        sdaacc_tooltip
-    )
-    VALUES
-    (
-        @NuevoPermisoId,
-        'es-DO',
-        @NombreES,
-        @TooltipES
-    ),
-    (
-        @NuevoPermisoId,
-        'en-US',
-        @NombreEN,
-        @TooltipEN
-    );
-
-    PRINT 'Permiso creado correctamente para el Listado de Empleado y Vacaciones.';
-    PRINT 'ID: ' + CAST(@NuevoPermisoId AS VARCHAR(20));
+        -- DEFINICIÓN EN EL MÓDULO (FILTROS)
+        IF NOT EXISTS (SELECT 1 FROM hadmreportemst WHERE admreporte_guid = @Guid)
+        BEGIN
+            INSERT INTO hadmreportemst (
+                admreporte_guid, sdaacc_numid, admreporte_nombre, admreporte_descripcion,
+                admreporte_tipo, sdareport_numid, admreporte_fuente, admreporte_tipofuente,
+                admreporte_TipoNomina, admreporte_Periodo, admreporte_Fecha, admreporte_sucursal,
+                admreporte_departamento, admreporte_puesto, admreporte_empleado, admreporte_concepto,
+                admreporte_origenconcepto, admsts_codigo, admreporte_genero, admreporte_tipo_sangre,
+                admreporte_estado_civil, admreporte_fecha_nacimiento, admreporte_fecha_inicio,
+                admreporte_fecha_desvinc, admreporte_fecha_final, admreporte_salario,
+                admreporte_tipo_salario, admreporte_tipo_contrato, admreporte_forma_pago,
+                admreporte_mes, admreporte_anio
+            )
+            VALUES (
+                @Guid, @NuevoPermisoId, @NombreES, @TooltipES, 
+                1, @SdaReportNumId, @FuenteDatos, 1, 
+                
+                0, 0, 0, -- nomina, periodo, fecha
+                1, 1, 1, 1, -- sucursal, depto, puesto, empleado
+                0, 0, -- concepto, origenconcepto
+                1, -- admsts_codigo (Filtro por estado)
+                1, -- admreporte_genero (Filtro por sexo)
+                0, 0, 0, 0, 0, 0, 0, 0, 
+                1, -- admreporte_tipo_contrato
+                0, 0, 0
+            );
+            PRINT 'Registro en hadmreportemst insertado exitosamente.';
+        END
+        ELSE
+        BEGIN
+            PRINT 'El reporte ya existe en hadmreportemst.';
+        END
+    END
+    ELSE
+    BEGIN
+        PRINT 'No es un reporte (@EsReporte = 0). Omitiendo inserciones en xsdareportmst y hadmreportemst.';
+    END
 
     COMMIT TRANSACTION;
+    PRINT 'Transacción completada exitosamente.';
+
 END TRY
 BEGIN CATCH
 
@@ -210,8 +143,7 @@ BEGIN CATCH
         ROLLBACK TRANSACTION;
 
     DECLARE @ErrorMensaje NVARCHAR(4000) = ERROR_MESSAGE();
-
-    PRINT 'Error al crear el permiso:';
+    PRINT 'Error detectado:';
     PRINT @ErrorMensaje;
 
     THROW;
