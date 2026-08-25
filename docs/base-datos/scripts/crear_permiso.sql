@@ -1,3 +1,4 @@
+
 BEGIN TRY
     BEGIN TRANSACTION;
 
@@ -20,6 +21,8 @@ BEGIN TRY
 
     -- VARIABLES DINÁMICAS PARA REPORTES
     DECLARE @EsReporte BIT = 1; -- 1 = Es un reporte (aplica inserts), 0 = Solo crear permiso
+    DECLARE @ReporteNombre VARCHAR(200) = ' Accion: Reporte DGT9';
+    DECLARE @ReporteTooltip VARCHAR(200) = 'Genera el reporte DGT9 (Suspensión Contrato Laboral) para el Ministerio de Trabajo.';
     DECLARE @NombreReporteFRX VARCHAR(100) = 'reporteDGT9.frx';
     DECLARE @FuenteDatos VARCHAR(100) = 'rptDGT9View'; 
 
@@ -109,7 +112,7 @@ BEGIN TRY
                 admreporte_mes, admreporte_anio
             )
             VALUES (
-                @Guid, @NuevoPermisoId, @NombreES, @TooltipES, 
+                @Guid, @NuevoPermisoId, @ReporteNombre, @ReporteTooltip, 
                 1, @SdaReportNumId, @FuenteDatos, 1, 
                 
                 0, 0, 0, -- nomina, periodo, fecha
